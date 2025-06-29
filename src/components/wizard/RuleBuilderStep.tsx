@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '@mui/material';
 import AIRuleRecommendations from './AIRuleRecommendations';
 import AIErrorCorrection from './AIErrorCorrection';
 import NaturalLanguageModification from './NaturalLanguageModification';
-import { RuleRecommendation, ErrorCorrection } from '@/utils/aiServices';
+import { RuleRecommendation } from '@/utils/aiServices';
 
 const RULE_TYPES = [
   { type: 'co-run', label: 'Co-run (tasks that must go together)' },
@@ -39,11 +39,13 @@ export const RuleBuilderStep: React.FC<RuleBuilderStepProps> = ({ onNext, data }
   const handleApplyRule = (rule: RuleRecommendation) => {
     // Convert AI recommendation to a rule
     const newRule: Rule = {
-      type: rule.ruleType,
+      type: rule.category,
       params: {
-        field: rule.field,
-        condition: rule.condition,
-        description: rule.description
+        name: rule.name,
+        description: rule.description,
+        ruleDefinition: rule.ruleDefinition,
+        confidence: rule.confidence,
+        examples: rule.examples.join(', ')
       }
     };
     setRules([...rules, newRule]);
@@ -51,32 +53,16 @@ export const RuleBuilderStep: React.FC<RuleBuilderStepProps> = ({ onNext, data }
 
   const handleApplyAllRules = (aiRules: RuleRecommendation[]) => {
     const newRules = aiRules.map(rule => ({
-      type: rule.ruleType,
+      type: rule.category,
       params: {
-        field: rule.field,
-        condition: rule.condition,
-        description: rule.description
+        name: rule.name,
+        description: rule.description,
+        ruleDefinition: rule.ruleDefinition,
+        confidence: rule.confidence,
+        examples: rule.examples.join(', ')
       }
     }));
     setRules([...rules, ...newRules]);
-  };
-
-  const handleApplyCorrection = (correction: ErrorCorrection) => {
-    // Apply error correction to data
-    console.log('Applying correction:', correction);
-    // This would typically update the data in the store
-  };
-
-  const handleApplyAllCorrections = (corrections: ErrorCorrection[]) => {
-    // Apply all corrections to data
-    console.log('Applying all corrections:', corrections);
-    // This would typically update the data in the store
-  };
-
-  const handleApplyModification = (modifiedData: Record<string, unknown>[]) => {
-    // Apply natural language modification to data
-    console.log('Applying modification to data:', modifiedData);
-    // This would typically update the data in the store
   };
 
   return (
@@ -103,8 +89,6 @@ export const RuleBuilderStep: React.FC<RuleBuilderStepProps> = ({ onNext, data }
       <Box>
         <AIErrorCorrection
           data={data}
-          onApplyCorrection={handleApplyCorrection}
-          onApplyAllCorrections={handleApplyAllCorrections}
         />
       </Box>
 
@@ -112,7 +96,6 @@ export const RuleBuilderStep: React.FC<RuleBuilderStepProps> = ({ onNext, data }
       <Box>
         <NaturalLanguageModification
           data={data}
-          onApplyModification={handleApplyModification}
         />
       </Box>
 
