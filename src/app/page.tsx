@@ -12,6 +12,7 @@ export default function Home() {
   const step = useWizardStore((s) => s.step);
   const setStep = useWizardStore((s) => s.setStep);
   const setTables = useWizardStore((s) => s.setTables);
+  const tables = useWizardStore((s) => s.tables);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +30,14 @@ export default function Home() {
     }
   };
 
+  // Get the first table's data for AI processing
+  const getDataForAI = () => {
+    if (tables && tables.length > 0 && tables[0].data) {
+      return tables[0].data;
+    }
+    return [];
+  };
+
   return (
     <WizardLayout activeStep={step}>
       {step === 0 && (
@@ -38,7 +47,10 @@ export default function Home() {
         <DataReviewStep onNext={() => setStep(2)} />
       )}
       {step === 2 && (
-        <RuleBuilderStep onNext={() => setStep(3)} />
+        <RuleBuilderStep 
+          onNext={() => setStep(3)} 
+          data={getDataForAI()}
+        />
       )}
       {step === 3 && (
         <PrioritizationStep onExport={() => console.log('Export completed')} />
