@@ -23,18 +23,14 @@ import {
 } from '@mui/material';
 import { AutoFixHigh, CheckCircle, Warning, Error } from '@mui/icons-material';
 import { ErrorCorrection } from '@/utils/aiServices';
-import { useWizardStore } from '@/store/wizardStore';
+import { useWizardStore, RowData } from '@/store/wizardStore';
 
 interface AIErrorCorrectionProps {
   data: Record<string, unknown>[];
-  onApplyCorrection: (correction: ErrorCorrection) => void;
-  onApplyAllCorrections: (corrections: ErrorCorrection[]) => void;
 }
 
 export default function AIErrorCorrection({
-  data,
-  onApplyCorrection,
-  onApplyAllCorrections
+  data
 }: AIErrorCorrectionProps) {
   const [corrections, setCorrections] = useState<ErrorCorrection[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,7 +53,7 @@ export default function AIErrorCorrection({
       // Analyze the actual data for potential errors
       const detectedCorrections: ErrorCorrection[] = [];
       
-      data.forEach((row, rowIndex) => {
+      data.forEach((row) => {
         Object.entries(row).forEach(([field, value]) => {
           if (typeof value === 'string') {
             // Check for email format issues
@@ -157,7 +153,7 @@ export default function AIErrorCorrection({
       );
       
       if (rowIndex !== -1) {
-        const updatedRow = { ...data[rowIndex] };
+        const updatedRow = { ...data[rowIndex] } as RowData;
         updatedRow[selectedCorrection.field] = selectedCorrection.suggestedValue;
         
         // Update the data in the store
@@ -179,7 +175,7 @@ export default function AIErrorCorrection({
     );
     
     if (rowIndex !== -1) {
-      const updatedRow = { ...data[rowIndex] };
+      const updatedRow = { ...data[rowIndex] } as RowData;
       updatedRow[correction.field] = correction.suggestedValue;
       
       // Update the data in the store
@@ -197,7 +193,7 @@ export default function AIErrorCorrection({
       );
       
       if (rowIndex !== -1) {
-        const updatedRow = { ...data[rowIndex] };
+        const updatedRow = { ...data[rowIndex] } as RowData;
         updatedRow[correction.field] = correction.suggestedValue;
         updateTableRow(0, rowIndex, updatedRow);
       }

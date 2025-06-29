@@ -267,6 +267,10 @@ img, video {
   border-width: 1px;
 }
 
+.uppercase {
+  text-transform: uppercase;
+}
+
 .lowercase {
   text-transform: lowercase;
 }

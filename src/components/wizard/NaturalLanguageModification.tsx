@@ -12,43 +12,47 @@ import {
   Box,
   Typography,
   Divider,
-  Chip,
   List,
   ListItem,
   ListItemText,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions
 } from '@mui/material';
-import { SmartToy, Edit, Preview, CheckCircle } from '@mui/icons-material';
-import { useWizardStore } from '@/store/wizardStore';
+import { Chat, AutoFixHigh, CheckCircle } from '@mui/icons-material';
+import { useWizardStore, RowData } from '@/store/wizardStore';
 
 interface NaturalLanguageModificationProps {
   data: Record<string, unknown>[];
-  onApplyModification: (modifiedData: Record<string, unknown>[]) => void;
 }
 
 export default function NaturalLanguageModification({
-  data,
-  onApplyModification
+  data
 }: NaturalLanguageModificationProps) {
   const [instruction, setInstruction] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [modifications, setModifications] = useState<Array<{
+    field: string;
+    originalValue: string;
+    newValue: string;
+    reason: string;
+  }>>([]);
+  const [selectedModification, setSelectedModification] = useState<{
+    field: string;
+    originalValue: string;
+    newValue: string;
+    reason: string;
+  } | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   
-  const applyDataModification = useWizardStore((state) => state.applyDataModification);
+  const updateTableRow = useWizardStore((state) => state.updateTableRow);
 
-  const processModification = async () => {
-    if (!instruction.trim()) {
-      setError('Please enter a modification instruction');
-      return;
-    }
-
-    if (data.length === 0) {
-      setError('No data available for modification');
+  const processInstruction = async () => {
+    if (!instruction.trim() || data.length === 0) {
+      setError('Please provide an instruction and ensure data is available');
       return;
     }
 
@@ -56,144 +60,198 @@ export default function NaturalLanguageModification({
     setError(null);
 
     try {
-      // Create the modification function based on the instruction
-      const modificationFunction = (data: Record<string, unknown>[]) => {
-        return data.map(row => {
-          const modifiedRow = { ...row };
-          
-          // Apply transformations based on instruction keywords
-          if (instruction.toLowerCase().includes('capitalize')) {
-            Object.keys(modifiedRow).forEach(key => {
-              if (typeof modifiedRow[key] === 'string') {
-                modifiedRow[key] = (modifiedRow[key] as string).toUpperCase();
-              }
-            });
-          }
-          
-          if (instruction.toLowerCase().includes('lowercase')) {
-            Object.keys(modifiedRow).forEach(key => {
-              if (typeof modifiedRow[key] === 'string') {
-                modifiedRow[key] = (modifiedRow[key] as string).toLowerCase();
-              }
-            });
-          }
-          
-          if (instruction.toLowerCase().includes('trim')) {
-            Object.keys(modifiedRow).forEach(key => {
-              if (typeof modifiedRow[key] === 'string') {
-                modifiedRow[key] = (modifiedRow[key] as string).trim();
-              }
-            });
-          }
-          
-          if (instruction.toLowerCase().includes('title case')) {
-            Object.keys(modifiedRow).forEach(key => {
-              if (typeof modifiedRow[key] === 'string') {
-                modifiedRow[key] = (modifiedRow[key] as string)
-                  .toLowerCase()
-                  .split(' ')
-                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(' ');
-              }
-            });
-          }
-          
-          if (instruction.toLowerCase().includes('remove spaces')) {
-            Object.keys(modifiedRow).forEach(key => {
-              if (typeof modifiedRow[key] === 'string') {
-                modifiedRow[key] = (modifiedRow[key] as string).replace(/\s+/g, '');
-              }
-            });
-          }
-          
-          return modifiedRow;
-        });
-      };
+      // Simulate AI processing with mock modifications based on the instruction
+      const mockModifications: Array<{
+        field: string;
+        originalValue: string;
+        newValue: string;
+        reason: string;
+      }> = [];
 
-      // Generate preview
-      const previewResult = modificationFunction([...data]);
+      // Analyze the instruction and apply logic
+      const lowerInstruction = instruction.toLowerCase();
       
+      if (lowerInstruction.includes('capitalize') || lowerInstruction.includes('uppercase')) {
+        data.forEach((row) => {
+          Object.entries(row).forEach(([field, value]) => {
+            if (typeof value === 'string' && value.length > 0) {
+              const capitalized = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+              if (capitalized !== value) {
+                mockModifications.push({
+                  field,
+                  originalValue: value,
+                  newValue: capitalized,
+                  reason: 'Capitalized first letter and made rest lowercase'
+                });
+              }
+            }
+          });
+        });
+      } else if (lowerInstruction.includes('trim') || lowerInstruction.includes('whitespace')) {
+        data.forEach((row) => {
+          Object.entries(row).forEach(([field, value]) => {
+            if (typeof value === 'string' && value !== value.trim()) {
+              mockModifications.push({
+                field,
+                originalValue: value,
+                newValue: value.trim(),
+                reason: 'Removed leading and trailing whitespace'
+              });
+            }
+          });
+        });
+      } else if (lowerInstruction.includes('email') && lowerInstruction.includes('format')) {
+        data.forEach((row) => {
+          Object.entries(row).forEach(([field, value]) => {
+            if (typeof value === 'string' && field.toLowerCase().includes('email') && value.includes('@')) {
+              const formatted = value.toLowerCase().trim();
+              if (formatted !== value) {
+                mockModifications.push({
+                  field,
+                  originalValue: value,
+                  newValue: formatted,
+                  reason: 'Standardized email format (lowercase, trimmed)'
+                });
+              }
+            }
+          });
+        });
+      } else if (lowerInstruction.includes('phone') && lowerInstruction.includes('format')) {
+        data.forEach((row) => {
+          Object.entries(row).forEach(([field, value]) => {
+            if (typeof value === 'string' && field.toLowerCase().includes('phone')) {
+              const digits = value.replace(/\D/g, '');
+              if (digits.length === 10) {
+                const formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+                if (formatted !== value) {
+                  mockModifications.push({
+                    field,
+                    originalValue: value,
+                    newValue: formatted,
+                    reason: 'Formatted phone number as (XXX) XXX-XXXX'
+                  });
+                }
+              }
+            }
+          });
+        });
+      } else {
+        // Generic text replacement based on instruction
+        data.forEach((row) => {
+          Object.entries(row).forEach(([field, value]) => {
+            if (typeof value === 'string' && value.length > 0) {
+              // Simple text transformations based on common instructions
+              let newValue = value;
+              
+              if (lowerInstruction.includes('uppercase')) {
+                newValue = value.toUpperCase();
+              } else if (lowerInstruction.includes('lowercase')) {
+                newValue = value.toLowerCase();
+              } else if (lowerInstruction.includes('replace') && lowerInstruction.includes('with')) {
+                // Extract replacement pattern from instruction
+                const replaceMatch = instruction.match(/replace\s+["']([^"']+)["']\s+with\s+["']([^"']+)["']/i);
+                if (replaceMatch) {
+                  const [, from, to] = replaceMatch;
+                  newValue = value.replace(new RegExp(from, 'gi'), to);
+                }
+              }
+              
+              if (newValue !== value) {
+                mockModifications.push({
+                  field,
+                  originalValue: value,
+                  newValue,
+                  reason: `Applied transformation based on instruction: "${instruction}"`
+                });
+              }
+            }
+          });
+        });
+      }
+
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      setPreviewData(previewResult);
-      setPreviewDialogOpen(true);
+      setModifications(mockModifications);
     } catch (err) {
-      setError('Failed to process modification');
-      console.error('AI modification error:', err);
+      setError('Failed to process instruction');
+      console.error('Natural language modification error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApplyModification = () => {
-    // Apply the modification to the actual data in the store
-    applyDataModification((data) => {
-      return data.map(row => {
-        const modifiedRow = { ...row };
-        
-        // Apply the same transformations
-        if (instruction.toLowerCase().includes('capitalize')) {
-          Object.keys(modifiedRow).forEach(key => {
-            if (typeof modifiedRow[key] === 'string') {
-              modifiedRow[key] = (modifiedRow[key] as string).toUpperCase();
-            }
-          });
-        }
-        
-        if (instruction.toLowerCase().includes('lowercase')) {
-          Object.keys(modifiedRow).forEach(key => {
-            if (typeof modifiedRow[key] === 'string') {
-              modifiedRow[key] = (modifiedRow[key] as string).toLowerCase();
-            }
-          });
-        }
-        
-        if (instruction.toLowerCase().includes('trim')) {
-          Object.keys(modifiedRow).forEach(key => {
-            if (typeof modifiedRow[key] === 'string') {
-              modifiedRow[key] = (modifiedRow[key] as string).trim();
-            }
-          });
-        }
-        
-        if (instruction.toLowerCase().includes('title case')) {
-          Object.keys(modifiedRow).forEach(key => {
-            if (typeof modifiedRow[key] === 'string') {
-              modifiedRow[key] = (modifiedRow[key] as string)
-                .toLowerCase()
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
-            }
-          });
-        }
-        
-        if (instruction.toLowerCase().includes('remove spaces')) {
-          Object.keys(modifiedRow).forEach(key => {
-            if (typeof modifiedRow[key] === 'string') {
-              modifiedRow[key] = (modifiedRow[key] as string).replace(/\s+/g, '');
-            }
-          });
-        }
-        
-        return modifiedRow;
-      });
-    });
-    
-    setPreviewDialogOpen(false);
-    setInstruction('');
-    setPreviewData([]);
+  const handleModificationClick = (modification: {
+    field: string;
+    originalValue: string;
+    newValue: string;
+    reason: string;
+  }) => {
+    setSelectedModification(modification);
+    setDialogOpen(true);
   };
 
-  const getInstructionExamples = () => [
-    'Capitalize all text fields',
-    'Convert all text to lowercase',
-    'Trim whitespace from all fields',
-    'Convert to title case',
-    'Remove all spaces from text',
-    'Standardize date format to YYYY-MM-DD'
-  ];
+  const handleApplyModification = () => {
+    if (selectedModification) {
+      // Find the row that needs modification
+      const rowIndex = data.findIndex(row => 
+        row[selectedModification.field] === selectedModification.originalValue
+      );
+      
+      if (rowIndex !== -1) {
+        const updatedRow = { ...data[rowIndex] } as RowData;
+        updatedRow[selectedModification.field] = selectedModification.newValue;
+        
+        // Update the data in the store
+        updateTableRow(0, rowIndex, updatedRow);
+        
+        // Remove the modification from the list
+        setModifications(prev => prev.filter(m => m !== selectedModification));
+      }
+      
+      setDialogOpen(false);
+      setSelectedModification(null);
+    }
+  };
+
+  const handleApplySingleModification = (modification: {
+    field: string;
+    originalValue: string;
+    newValue: string;
+    reason: string;
+  }) => {
+    // Find the row that needs modification
+    const rowIndex = data.findIndex(row => 
+      row[modification.field] === modification.originalValue
+    );
+    
+    if (rowIndex !== -1) {
+      const updatedRow = { ...data[rowIndex] } as RowData;
+      updatedRow[modification.field] = modification.newValue;
+      
+      // Update the data in the store
+      updateTableRow(0, rowIndex, updatedRow);
+      
+      // Remove the modification from the list
+      setModifications(prev => prev.filter(m => m !== modification));
+    }
+  };
+
+  const handleApplyAllModifications = () => {
+    modifications.forEach(modification => {
+      const rowIndex = data.findIndex(row => 
+        row[modification.field] === modification.originalValue
+      );
+      
+      if (rowIndex !== -1) {
+        const updatedRow = { ...data[rowIndex] } as RowData;
+        updatedRow[modification.field] = modification.newValue;
+        updateTableRow(0, rowIndex, updatedRow);
+      }
+    });
+    
+    setModifications([]);
+  };
 
   return (
     <>
@@ -201,136 +259,179 @@ export default function NaturalLanguageModification({
         <CardHeader
           title={
             <Box display="flex" alignItems="center" gap={1}>
-              <SmartToy color="primary" />
+              <Chat color="primary" />
               <Typography variant="h6">Natural Language Modification</Typography>
             </Box>
           }
-          subheader="Modify your data using plain English instructions"
+          subheader="Describe data changes in plain English"
         />
         
         <CardContent>
+          <Box display="flex" gap={2} mb={3}>
+            <TextField
+              fullWidth
+              label="Describe the changes you want to make"
+              placeholder="e.g., 'Capitalize all names', 'Format phone numbers', 'Replace 'old' with 'new''"
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value)}
+              multiline
+              rows={2}
+              disabled={loading}
+            />
+            <Button
+              variant="contained"
+              onClick={processInstruction}
+              disabled={loading || !instruction.trim() || data.length === 0}
+              startIcon={loading ? <CircularProgress size={20} /> : <AutoFixHigh />}
+              sx={{ minWidth: 120 }}
+            >
+              {loading ? 'Processing...' : 'Apply'}
+            </Button>
+          </Box>
+
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}
 
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            label="Modification Instruction"
-            placeholder="e.g., Capitalize all text fields, standardize date formats, etc."
-            value={instruction}
-            onChange={(e) => setInstruction(e.target.value)}
-            sx={{ mb: 2 }}
-          />
+          {modifications.length > 0 && (
+            <>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="subtitle1">
+                  {modifications.length} modification{modifications.length !== 1 ? 's' : ''} ready to apply
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleApplyAllModifications}
+                >
+                  Apply All Changes
+                </Button>
+              </Box>
+              
+              <Divider sx={{ mb: 2 }} />
+              
+              <List>
+                {modifications.map((modification, index) => (
+                  <ListItem
+                    key={index}
+                    sx={{
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      mb: 1,
+                      backgroundColor: 'background.paper',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'action.hover'
+                      }
+                    }}
+                    onClick={() => handleModificationClick(modification)}
+                  >
+                    <ListItemText
+                      primary={
+                        <Box display="flex" alignItems="center" gap={1} mb={1}>
+                          <CheckCircle color="success" fontSize="small" />
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            {modification.field}
+                          </Typography>
+                          <Chip
+                            label="Modification"
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                          />
+                        </Box>
+                      }
+                      secondary={
+                        <Box>
+                          <Typography component="span" variant="body2" color="text.secondary" display="block" mb={1}>
+                            <strong>From:</strong> {modification.originalValue}
+                          </Typography>
+                          <Typography component="span" variant="body2" color="text.secondary" display="block" mb={1}>
+                            <strong>To:</strong> {modification.newValue}
+                          </Typography>
+                          <Typography component="span" variant="caption" color="text.secondary" display="block">
+                            {modification.reason}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleApplySingleModification(modification);
+                      }}
+                      sx={{ ml: 2 }}
+                    >
+                      Apply
+                    </Button>
+                  </ListItem>
+                ))}
+              </List>
+            </>
+          )}
 
-          <Box display="flex" gap={1} mb={2}>
-            <Button
-              variant="contained"
-              onClick={processModification}
-              disabled={loading || !instruction.trim() || data.length === 0}
-              startIcon={loading ? <CircularProgress size={20} /> : <Edit />}
-            >
-              {loading ? 'Processing...' : 'Process Modification'}
-            </Button>
-            
-            <Button
-              variant="outlined"
-              onClick={() => setInstruction('')}
-              disabled={loading}
-            >
-              Clear
-            </Button>
-          </Box>
-
-          <Divider sx={{ my: 2 }} />
-
-          <Typography variant="subtitle2" gutterBottom>
-            Example Instructions:
-          </Typography>
-          
-          <Box display="flex" flexWrap="wrap" gap={1}>
-            {getInstructionExamples().map((example, index) => (
-              <Chip
-                key={index}
-                label={example}
-                size="small"
-                variant="outlined"
-                onClick={() => setInstruction(example)}
-                sx={{ cursor: 'pointer' }}
-              />
-            ))}
-          </Box>
-
-          {!loading && data.length > 0 && (
-            <Box mt={2} p={2} bgcolor="background.paper" borderRadius={1}>
+          {!loading && modifications.length === 0 && !error && (
+            <Box textAlign="center" py={4}>
+              <Chat sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
               <Typography variant="body2" color="text.secondary">
-                <strong>Data Preview:</strong> {data.length} rows available for modification
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Fields: {Object.keys(data[0] || {}).join(', ')}
+                Describe the changes you want to make to your data
               </Typography>
             </Box>
           )}
         </CardContent>
       </Card>
 
-      {/* Preview Dialog */}
-      <Dialog 
-        open={previewDialogOpen} 
-        onClose={() => setPreviewDialogOpen(false)} 
-        maxWidth="lg" 
-        fullWidth
-      >
+      {/* Modification Details Dialog */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Box display="flex" alignItems="center" gap={1}>
-            <Preview color="primary" />
-            Modification Preview
+            <Chat color="primary" />
+            Modification Details
           </Box>
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Preview of your data after applying: &quot;{instruction}&quot;
-          </Typography>
-          
-          <Divider sx={{ my: 2 }} />
-          
-          <Box maxHeight={400} overflow="auto">
-            <List dense>
-              {previewData.slice(0, 10).map((row, index) => (
-                <ListItem key={index} sx={{ border: 1, borderColor: 'divider', mb: 1, borderRadius: 1 }}>
-                  <ListItemText
-                    primary={`Row ${index + 1}`}
-                    secondary={
-                      <Box>
-                        {Object.entries(row).map(([key, value]) => (
-                          <Typography key={key} variant="caption" display="block">
-                            <strong>{key}:</strong> {String(value)}
-                          </Typography>
-                        ))}
-                      </Box>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
-            
-            {previewData.length > 10 && (
-              <Typography variant="body2" color="text.secondary" textAlign="center" py={2}>
-                ... and {previewData.length - 10} more rows
+          {selectedModification && (
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Field: {selectedModification.field}
               </Typography>
-            )}
-          </Box>
+              
+              <TextField
+                fullWidth
+                label="Original Value"
+                value={selectedModification.originalValue}
+                margin="normal"
+                InputProps={{ readOnly: true }}
+              />
+              
+              <TextField
+                fullWidth
+                label="New Value"
+                value={selectedModification.newValue}
+                margin="normal"
+                InputProps={{ readOnly: true }}
+              />
+              
+              <TextField
+                fullWidth
+                label="Reason"
+                value={selectedModification.reason}
+                margin="normal"
+                multiline
+                rows={3}
+                InputProps={{ readOnly: true }}
+              />
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPreviewDialogOpen(false)}>Cancel</Button>
-          <Button 
-            onClick={handleApplyModification} 
-            variant="contained"
-            startIcon={<CheckCircle />}
-          >
+          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleApplyModification} variant="contained">
             Apply Modification
           </Button>
         </DialogActions>

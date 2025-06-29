@@ -13,7 +13,7 @@
   "static/chunks/node_modules_@mui_x-data-grid_esm_components_e4a0a81c._.js",
   "static/chunks/node_modules_@mui_x-data-grid_esm_b014ae4b._.js",
   "static/chunks/node_modules_@popperjs_core_lib_229f7621._.js",
-  "static/chunks/node_modules_d70355ae._.js"
+  "static/chunks/node_modules_551c6839._.js"
 ],
     source: "dynamic"
 });
