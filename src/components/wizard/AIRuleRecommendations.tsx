@@ -16,7 +16,7 @@ import {
   Typography,
   Divider
 } from '@mui/material';
-import { Lightbulb, AutoAwesome, CheckCircle } from '@mui/icons-material';
+import { AutoAwesome, CheckCircle, Lightbulb } from '@mui/icons-material';
 import { RuleRecommendation } from '@/utils/aiServices';
 
 interface AIRuleRecommendationsProps {
@@ -47,28 +47,40 @@ export default function AIRuleRecommendations({
       // Mock AI recommendations for now - replace with actual AI service call
       const mockRecommendations: RuleRecommendation[] = [
         {
-          ruleType: 'validation',
-          field: 'email',
-          condition: 'email format',
+          id: 'email-validation-001',
+          name: 'Email Format Validation',
           description: 'Validate email addresses are in correct format',
+          category: 'validation',
           confidence: 0.95,
-          suggestedAction: 'Add email validation rule'
+          ruleDefinition: 'field matches email regex pattern',
+          examples: ['john@example.com', 'invalid-email']
         },
         {
-          ruleType: 'transformation',
-          field: 'phone',
-          condition: 'standardize format',
+          id: 'phone-format-002',
+          name: 'Phone Number Standardization',
           description: 'Standardize phone numbers to consistent format',
+          category: 'formatting',
           confidence: 0.88,
-          suggestedAction: 'Add phone number formatting rule'
+          ruleDefinition: 'format phone as (XXX) XXX-XXXX',
+          examples: ['1234567890', '(123) 456-7890']
         },
         {
-          ruleType: 'validation',
-          field: 'age',
-          condition: 'range 0-120',
+          id: 'age-validation-003',
+          name: 'Age Range Validation',
           description: 'Validate age is within reasonable range',
+          category: 'validation',
           confidence: 0.92,
-          suggestedAction: 'Add age range validation'
+          ruleDefinition: 'age >= 0 AND age <= 120',
+          examples: ['25', '150', '-5']
+        },
+        {
+          id: 'name-capitalization-004',
+          name: 'Name Capitalization',
+          description: 'Ensure proper name capitalization',
+          category: 'transformation',
+          confidence: 0.85,
+          ruleDefinition: 'capitalize first letter of each word',
+          examples: ['john doe', 'JOHN DOE', 'John Doe']
         }
       ];
 
@@ -90,13 +102,15 @@ export default function AIRuleRecommendations({
     return 'error';
   };
 
-  const getRuleTypeIcon = (ruleType: string) => {
-    switch (ruleType) {
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
       case 'validation':
         return <CheckCircle fontSize="small" />;
       case 'transformation':
         return <AutoAwesome fontSize="small" />;
       case 'formatting':
+        return <Lightbulb fontSize="small" />;
+      case 'business':
         return <Lightbulb fontSize="small" />;
       default:
         return <Lightbulb fontSize="small" />;
@@ -150,9 +164,9 @@ export default function AIRuleRecommendations({
             <Divider sx={{ mb: 2 }} />
             
             <List>
-              {recommendations.map((rule, index) => (
+              {recommendations.map((rule) => (
                 <ListItem
-                  key={index}
+                  key={rule.id}
                   sx={{
                     border: 1,
                     borderColor: 'divider',
@@ -164,12 +178,12 @@ export default function AIRuleRecommendations({
                   <ListItemText
                     primary={
                       <Box display="flex" alignItems="center" gap={1} mb={1}>
-                        {getRuleTypeIcon(rule.ruleType)}
+                        {getCategoryIcon(rule.category)}
                         <Typography variant="subtitle2" fontWeight="bold">
-                          {rule.field}
+                          {rule.name}
                         </Typography>
                         <Chip
-                          label={rule.ruleType}
+                          label={rule.category}
                           size="small"
                           color="primary"
                           variant="outlined"
@@ -186,8 +200,11 @@ export default function AIRuleRecommendations({
                         <Typography component="span" variant="body2" color="text.secondary" display="block" mb={1}>
                           {rule.description}
                         </Typography>
+                        <Typography component="span" variant="caption" color="text.secondary" display="block" mb={1}>
+                          <strong>Rule:</strong> {rule.ruleDefinition}
+                        </Typography>
                         <Typography component="span" variant="caption" color="text.secondary" display="block">
-                          Condition: {rule.condition}
+                          <strong>Examples:</strong> {rule.examples.join(', ')}
                         </Typography>
                       </Box>
                     }
