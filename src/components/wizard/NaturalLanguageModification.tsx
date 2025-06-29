@@ -22,6 +22,7 @@ import {
   DialogActions
 } from '@mui/material';
 import { SmartToy, Edit, Preview, CheckCircle } from '@mui/icons-material';
+import { useWizardStore } from '@/store/wizardStore';
 
 interface NaturalLanguageModificationProps {
   data: Record<string, unknown>[];
@@ -37,6 +38,8 @@ export default function NaturalLanguageModification({
   const [error, setError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<Record<string, unknown>[]>([]);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  
+  const applyDataModification = useWizardStore((state) => state.applyDataModification);
 
   const processModification = async () => {
     if (!instruction.trim()) {
@@ -53,11 +56,83 @@ export default function NaturalLanguageModification({
     setError(null);
 
     try {
-      // Mock AI data modification for now - replace with actual AI service call
-      const mockModifiedData = data.map(row => {
+      // Create the modification function based on the instruction
+      const modificationFunction = (data: Record<string, unknown>[]) => {
+        return data.map(row => {
+          const modifiedRow = { ...row };
+          
+          // Apply transformations based on instruction keywords
+          if (instruction.toLowerCase().includes('capitalize')) {
+            Object.keys(modifiedRow).forEach(key => {
+              if (typeof modifiedRow[key] === 'string') {
+                modifiedRow[key] = (modifiedRow[key] as string).toUpperCase();
+              }
+            });
+          }
+          
+          if (instruction.toLowerCase().includes('lowercase')) {
+            Object.keys(modifiedRow).forEach(key => {
+              if (typeof modifiedRow[key] === 'string') {
+                modifiedRow[key] = (modifiedRow[key] as string).toLowerCase();
+              }
+            });
+          }
+          
+          if (instruction.toLowerCase().includes('trim')) {
+            Object.keys(modifiedRow).forEach(key => {
+              if (typeof modifiedRow[key] === 'string') {
+                modifiedRow[key] = (modifiedRow[key] as string).trim();
+              }
+            });
+          }
+          
+          if (instruction.toLowerCase().includes('title case')) {
+            Object.keys(modifiedRow).forEach(key => {
+              if (typeof modifiedRow[key] === 'string') {
+                modifiedRow[key] = (modifiedRow[key] as string)
+                  .toLowerCase()
+                  .split(' ')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
+              }
+            });
+          }
+          
+          if (instruction.toLowerCase().includes('remove spaces')) {
+            Object.keys(modifiedRow).forEach(key => {
+              if (typeof modifiedRow[key] === 'string') {
+                modifiedRow[key] = (modifiedRow[key] as string).replace(/\s+/g, '');
+              }
+            });
+          }
+          
+          return modifiedRow;
+        });
+      };
+
+      // Generate preview
+      const previewResult = modificationFunction([...data]);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setPreviewData(previewResult);
+      setPreviewDialogOpen(true);
+    } catch (err) {
+      setError('Failed to process modification');
+      console.error('AI modification error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApplyModification = () => {
+    // Apply the modification to the actual data in the store
+    applyDataModification((data) => {
+      return data.map(row => {
         const modifiedRow = { ...row };
         
-        // Simple mock transformations based on instruction keywords
+        // Apply the same transformations
         if (instruction.toLowerCase().includes('capitalize')) {
           Object.keys(modifiedRow).forEach(key => {
             if (typeof modifiedRow[key] === 'string') {
@@ -82,24 +157,30 @@ export default function NaturalLanguageModification({
           });
         }
         
+        if (instruction.toLowerCase().includes('title case')) {
+          Object.keys(modifiedRow).forEach(key => {
+            if (typeof modifiedRow[key] === 'string') {
+              modifiedRow[key] = (modifiedRow[key] as string)
+                .toLowerCase()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            }
+          });
+        }
+        
+        if (instruction.toLowerCase().includes('remove spaces')) {
+          Object.keys(modifiedRow).forEach(key => {
+            if (typeof modifiedRow[key] === 'string') {
+              modifiedRow[key] = (modifiedRow[key] as string).replace(/\s+/g, '');
+            }
+          });
+        }
+        
         return modifiedRow;
       });
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setPreviewData(mockModifiedData);
-      setPreviewDialogOpen(true);
-    } catch (err) {
-      setError('Failed to process modification');
-      console.error('AI modification error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleApplyModification = () => {
-    onApplyModification(previewData);
+    });
+    
     setPreviewDialogOpen(false);
     setInstruction('');
     setPreviewData([]);
@@ -109,9 +190,9 @@ export default function NaturalLanguageModification({
     'Capitalize all text fields',
     'Convert all text to lowercase',
     'Trim whitespace from all fields',
-    'Standardize date format to YYYY-MM-DD',
-    'Add prefix "ID-" to all ID fields',
-    'Remove special characters from names'
+    'Convert to title case',
+    'Remove all spaces from text',
+    'Standardize date format to YYYY-MM-DD'
   ];
 
   return (

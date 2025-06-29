@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { AutoFixHigh, CheckCircle, Warning, Error } from '@mui/icons-material';
 import { ErrorCorrection } from '@/utils/aiServices';
+import { useWizardStore } from '@/store/wizardStore';
 
 interface AIErrorCorrectionProps {
   data: Record<string, unknown>[];
@@ -40,6 +41,8 @@ export default function AIErrorCorrection({
   const [error, setError] = useState<string | null>(null);
   const [selectedCorrection, setSelectedCorrection] = useState<ErrorCorrection | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  const updateTableRow = useWizardStore((state) => state.updateTableRow);
 
   const detectErrors = async () => {
     if (data.length === 0) {
@@ -51,38 +54,67 @@ export default function AIErrorCorrection({
     setError(null);
 
     try {
-      // Mock AI error corrections for now - replace with actual AI service call
-      const mockCorrections: ErrorCorrection[] = [
-        {
-          field: 'email',
-          originalValue: 'john.doe@email',
-          suggestedValue: 'john.doe@email.com',
-          confidence: 0.95,
-          reason: 'Incomplete email address - missing domain extension',
-          correctionType: 'format'
-        },
-        {
-          field: 'phone',
-          originalValue: '123-456-789',
-          suggestedValue: '(123) 456-7890',
-          confidence: 0.88,
-          reason: 'Standardize phone number format',
-          correctionType: 'standardization'
-        },
-        {
-          field: 'name',
-          originalValue: 'john doe',
-          suggestedValue: 'John Doe',
-          confidence: 0.92,
-          reason: 'Capitalize proper names',
-          correctionType: 'format'
-        }
-      ];
+      // Analyze the actual data for potential errors
+      const detectedCorrections: ErrorCorrection[] = [];
+      
+      data.forEach((row, rowIndex) => {
+        Object.entries(row).forEach(([field, value]) => {
+          if (typeof value === 'string') {
+            // Check for email format issues
+            if (field.toLowerCase().includes('email') && value.includes('@') && !value.includes('.')) {
+              detectedCorrections.push({
+                field,
+                originalValue: value,
+                suggestedValue: value + '.com',
+                confidence: 0.85,
+                reason: 'Incomplete email address - missing domain extension',
+                correctionType: 'format'
+              });
+            }
+            
+            // Check for phone number format issues
+            if (field.toLowerCase().includes('phone') && value.length < 10) {
+              detectedCorrections.push({
+                field,
+                originalValue: value,
+                suggestedValue: `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6)}`,
+                confidence: 0.78,
+                reason: 'Phone number format could be standardized',
+                correctionType: 'standardization'
+              });
+            }
+            
+            // Check for name capitalization
+            if (field.toLowerCase().includes('name') && value.length > 0 && value === value.toLowerCase()) {
+              detectedCorrections.push({
+                field,
+                originalValue: value,
+                suggestedValue: value.charAt(0).toUpperCase() + value.slice(1),
+                confidence: 0.92,
+                reason: 'Proper names should be capitalized',
+                correctionType: 'format'
+              });
+            }
+            
+            // Check for extra whitespace
+            if (value !== value.trim()) {
+              detectedCorrections.push({
+                field,
+                originalValue: value,
+                suggestedValue: value.trim(),
+                confidence: 0.95,
+                reason: 'Remove leading/trailing whitespace',
+                correctionType: 'format'
+              });
+            }
+          }
+        });
+      });
 
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      setCorrections(mockCorrections);
+      setCorrections(detectedCorrections);
     } catch (err) {
       setError('Failed to detect errors');
       console.error('AI error detection error:', err);
@@ -119,10 +151,59 @@ export default function AIErrorCorrection({
 
   const handleApplyCorrection = () => {
     if (selectedCorrection) {
-      onApplyCorrection(selectedCorrection);
+      // Find the row that needs correction
+      const rowIndex = data.findIndex(row => 
+        row[selectedCorrection.field] === selectedCorrection.originalValue
+      );
+      
+      if (rowIndex !== -1) {
+        const updatedRow = { ...data[rowIndex] };
+        updatedRow[selectedCorrection.field] = selectedCorrection.suggestedValue;
+        
+        // Update the data in the store
+        updateTableRow(0, rowIndex, updatedRow);
+        
+        // Remove the correction from the list
+        setCorrections(prev => prev.filter(c => c !== selectedCorrection));
+      }
+      
       setDialogOpen(false);
       setSelectedCorrection(null);
     }
+  };
+
+  const handleApplySingleCorrection = (correction: ErrorCorrection) => {
+    // Find the row that needs correction
+    const rowIndex = data.findIndex(row => 
+      row[correction.field] === correction.originalValue
+    );
+    
+    if (rowIndex !== -1) {
+      const updatedRow = { ...data[rowIndex] };
+      updatedRow[correction.field] = correction.suggestedValue;
+      
+      // Update the data in the store
+      updateTableRow(0, rowIndex, updatedRow);
+      
+      // Remove the correction from the list
+      setCorrections(prev => prev.filter(c => c !== correction));
+    }
+  };
+
+  const handleApplyAllCorrections = () => {
+    corrections.forEach(correction => {
+      const rowIndex = data.findIndex(row => 
+        row[correction.field] === correction.originalValue
+      );
+      
+      if (rowIndex !== -1) {
+        const updatedRow = { ...data[rowIndex] };
+        updatedRow[correction.field] = correction.suggestedValue;
+        updateTableRow(0, rowIndex, updatedRow);
+      }
+    });
+    
+    setCorrections([]);
   };
 
   return (
@@ -164,7 +245,7 @@ export default function AIErrorCorrection({
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={() => onApplyAllCorrections(corrections)}
+                  onClick={handleApplyAllCorrections}
                 >
                   Apply All Corrections
                 </Button>
@@ -228,7 +309,7 @@ export default function AIErrorCorrection({
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onApplyCorrection(correction);
+                        handleApplySingleCorrection(correction);
                       }}
                       sx={{ ml: 2 }}
                     >

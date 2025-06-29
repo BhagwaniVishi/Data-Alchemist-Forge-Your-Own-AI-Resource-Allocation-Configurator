@@ -152,7 +152,7 @@ __turbopack_context__.s({
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/zustand/esm/react.mjs [app-ssr] (ecmascript)");
 ;
-const useWizardStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["create"])((set)=>({
+const useWizardStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["create"])((set, get)=>({
         step: 0,
         setStep: (step)=>set({
                 step
@@ -160,7 +160,55 @@ const useWizardStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
         tables: [],
         setTables: (tables)=>set({
                 tables
-            })
+            }),
+        updateTableData: (tableIndex, newData)=>{
+            const { tables } = get();
+            if (tableIndex >= 0 && tableIndex < tables.length) {
+                const updatedTables = [
+                    ...tables
+                ];
+                updatedTables[tableIndex] = {
+                    ...updatedTables[tableIndex],
+                    data: newData
+                };
+                set({
+                    tables: updatedTables
+                });
+            }
+        },
+        updateTableRow: (tableIndex, rowIndex, newRow)=>{
+            const { tables } = get();
+            if (tableIndex >= 0 && tableIndex < tables.length) {
+                const updatedTables = [
+                    ...tables
+                ];
+                const table = updatedTables[tableIndex];
+                if (rowIndex >= 0 && rowIndex < table.data.length) {
+                    table.data[rowIndex] = newRow;
+                    set({
+                        tables: updatedTables
+                    });
+                }
+            }
+        },
+        applyDataModification: (modificationFn)=>{
+            const { tables } = get();
+            if (tables.length > 0) {
+                const updatedTables = [
+                    ...tables
+                ];
+                // Apply modification to the first table (you can modify this logic as needed)
+                updatedTables[0] = {
+                    ...updatedTables[0],
+                    data: modificationFn([
+                        ...updatedTables[0].data
+                    ])
+                };
+                set({
+                    tables: updatedTables
+                });
+            }
+        }
     }));
 }}),
 "[externals]/stream [external] (stream, cjs)": (function(__turbopack_context__) {
@@ -1165,7 +1213,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$ico
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$CheckCircle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@mui/icons-material/esm/CheckCircle.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$Warning$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@mui/icons-material/esm/Warning.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$Error$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@mui/icons-material/esm/Error.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$wizardStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/store/wizardStore.ts [app-ssr] (ecmascript)");
 'use client';
+;
 ;
 ;
 ;
@@ -1179,6 +1229,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [selectedCorrection, setSelectedCorrection] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [dialogOpen, setDialogOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const updateTableRow = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$wizardStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useWizardStore"])((state)=>state.updateTableRow);
     const detectErrors = async ()=>{
         if (data.length === 0) {
             setError('No data available for error detection');
@@ -1187,36 +1238,61 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
         setLoading(true);
         setError(null);
         try {
-            // Mock AI error corrections for now - replace with actual AI service call
-            const mockCorrections = [
-                {
-                    field: 'email',
-                    originalValue: 'john.doe@email',
-                    suggestedValue: 'john.doe@email.com',
-                    confidence: 0.95,
-                    reason: 'Incomplete email address - missing domain extension',
-                    correctionType: 'format'
-                },
-                {
-                    field: 'phone',
-                    originalValue: '123-456-789',
-                    suggestedValue: '(123) 456-7890',
-                    confidence: 0.88,
-                    reason: 'Standardize phone number format',
-                    correctionType: 'standardization'
-                },
-                {
-                    field: 'name',
-                    originalValue: 'john doe',
-                    suggestedValue: 'John Doe',
-                    confidence: 0.92,
-                    reason: 'Capitalize proper names',
-                    correctionType: 'format'
-                }
-            ];
+            // Analyze the actual data for potential errors
+            const detectedCorrections = [];
+            data.forEach((row, rowIndex)=>{
+                Object.entries(row).forEach(([field, value])=>{
+                    if (typeof value === 'string') {
+                        // Check for email format issues
+                        if (field.toLowerCase().includes('email') && value.includes('@') && !value.includes('.')) {
+                            detectedCorrections.push({
+                                field,
+                                originalValue: value,
+                                suggestedValue: value + '.com',
+                                confidence: 0.85,
+                                reason: 'Incomplete email address - missing domain extension',
+                                correctionType: 'format'
+                            });
+                        }
+                        // Check for phone number format issues
+                        if (field.toLowerCase().includes('phone') && value.length < 10) {
+                            detectedCorrections.push({
+                                field,
+                                originalValue: value,
+                                suggestedValue: `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6)}`,
+                                confidence: 0.78,
+                                reason: 'Phone number format could be standardized',
+                                correctionType: 'standardization'
+                            });
+                        }
+                        // Check for name capitalization
+                        if (field.toLowerCase().includes('name') && value.length > 0 && value === value.toLowerCase()) {
+                            detectedCorrections.push({
+                                field,
+                                originalValue: value,
+                                suggestedValue: value.charAt(0).toUpperCase() + value.slice(1),
+                                confidence: 0.92,
+                                reason: 'Proper names should be capitalized',
+                                correctionType: 'format'
+                            });
+                        }
+                        // Check for extra whitespace
+                        if (value !== value.trim()) {
+                            detectedCorrections.push({
+                                field,
+                                originalValue: value,
+                                suggestedValue: value.trim(),
+                                confidence: 0.95,
+                                reason: 'Remove leading/trailing whitespace',
+                                correctionType: 'format'
+                            });
+                        }
+                    }
+                });
+            });
             // Simulate API delay
-            await new Promise((resolve)=>setTimeout(resolve, 2500));
-            setCorrections(mockCorrections);
+            await new Promise((resolve)=>setTimeout(resolve, 2000));
+            setCorrections(detectedCorrections);
         } catch (err) {
             setError('Failed to detect errors');
             console.error('AI error detection error:', err);
@@ -1236,7 +1312,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                     fontSize: "small"
                 }, void 0, false, {
                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                    lineNumber: 103,
+                    lineNumber: 135,
                     columnNumber: 16
                 }, this);
             case 'spelling':
@@ -1244,7 +1320,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                     fontSize: "small"
                 }, void 0, false, {
                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                    lineNumber: 105,
+                    lineNumber: 137,
                     columnNumber: 16
                 }, this);
             case 'standardization':
@@ -1252,7 +1328,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                     fontSize: "small"
                 }, void 0, false, {
                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                    lineNumber: 107,
+                    lineNumber: 139,
                     columnNumber: 16
                 }, this);
             case 'validation':
@@ -1260,7 +1336,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                     fontSize: "small"
                 }, void 0, false, {
                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                    lineNumber: 109,
+                    lineNumber: 141,
                     columnNumber: 16
                 }, this);
             default:
@@ -1268,7 +1344,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                     fontSize: "small"
                 }, void 0, false, {
                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                    lineNumber: 111,
+                    lineNumber: 143,
                     columnNumber: 16
                 }, this);
         }
@@ -1279,10 +1355,48 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
     };
     const handleApplyCorrection = ()=>{
         if (selectedCorrection) {
-            onApplyCorrection(selectedCorrection);
+            // Find the row that needs correction
+            const rowIndex = data.findIndex((row)=>row[selectedCorrection.field] === selectedCorrection.originalValue);
+            if (rowIndex !== -1) {
+                const updatedRow = {
+                    ...data[rowIndex]
+                };
+                updatedRow[selectedCorrection.field] = selectedCorrection.suggestedValue;
+                // Update the data in the store
+                updateTableRow(0, rowIndex, updatedRow);
+                // Remove the correction from the list
+                setCorrections((prev)=>prev.filter((c)=>c !== selectedCorrection));
+            }
             setDialogOpen(false);
             setSelectedCorrection(null);
         }
+    };
+    const handleApplySingleCorrection = (correction)=>{
+        // Find the row that needs correction
+        const rowIndex = data.findIndex((row)=>row[correction.field] === correction.originalValue);
+        if (rowIndex !== -1) {
+            const updatedRow = {
+                ...data[rowIndex]
+            };
+            updatedRow[correction.field] = correction.suggestedValue;
+            // Update the data in the store
+            updateTableRow(0, rowIndex, updatedRow);
+            // Remove the correction from the list
+            setCorrections((prev)=>prev.filter((c)=>c !== correction));
+        }
+    };
+    const handleApplyAllCorrections = ()=>{
+        corrections.forEach((correction)=>{
+            const rowIndex = data.findIndex((row)=>row[correction.field] === correction.originalValue);
+            if (rowIndex !== -1) {
+                const updatedRow = {
+                    ...data[rowIndex]
+                };
+                updatedRow[correction.field] = correction.suggestedValue;
+                updateTableRow(0, rowIndex, updatedRow);
+            }
+        });
+        setCorrections([]);
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
@@ -1302,7 +1416,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                     color: "primary"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                    lineNumber: 134,
+                                    lineNumber: 215,
                                     columnNumber: 15
                                 }, void 0),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Typography$2f$Typography$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Typography$3e$__["Typography"], {
@@ -1310,13 +1424,13 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                     children: "AI Error Correction"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                    lineNumber: 135,
+                                    lineNumber: 216,
                                     columnNumber: 15
                                 }, void 0)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                            lineNumber: 133,
+                            lineNumber: 214,
                             columnNumber: 13
                         }, void 0),
                         subheader: "Let AI detect and suggest fixes for data errors",
@@ -1328,22 +1442,22 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                 size: 20
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                lineNumber: 144,
+                                lineNumber: 225,
                                 columnNumber: 36
                             }, void 0) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$AutoFixHigh$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                lineNumber: 144,
+                                lineNumber: 225,
                                 columnNumber: 69
                             }, void 0),
                             children: loading ? 'Detecting...' : 'Detect Errors'
                         }, void 0, false, {
                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                            lineNumber: 140,
+                            lineNumber: 221,
                             columnNumber: 13
                         }, void 0)
                     }, void 0, false, {
                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                        lineNumber: 131,
+                        lineNumber: 212,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$CardContent$2f$CardContent$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CardContent$3e$__["CardContent"], {
@@ -1356,7 +1470,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                 children: error
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                lineNumber: 153,
+                                lineNumber: 234,
                                 columnNumber: 13
                             }, this),
                             corrections.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -1376,23 +1490,23 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                lineNumber: 161,
+                                                lineNumber: 242,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Button$2f$Button$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Button$3e$__["Button"], {
                                                 variant: "outlined",
                                                 size: "small",
-                                                onClick: ()=>onApplyAllCorrections(corrections),
+                                                onClick: handleApplyAllCorrections,
                                                 children: "Apply All Corrections"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                lineNumber: 164,
+                                                lineNumber: 245,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                        lineNumber: 160,
+                                        lineNumber: 241,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Divider$2f$Divider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Divider$3e$__["Divider"], {
@@ -1401,7 +1515,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                        lineNumber: 173,
+                                        lineNumber: 254,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$List$2f$List$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__List$3e$__["List"], {
@@ -1433,7 +1547,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                                     children: correction.field
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                                    lineNumber: 196,
+                                                                    lineNumber: 277,
                                                                     columnNumber: 27
                                                                 }, void 0),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Chip$2f$Chip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Chip$3e$__["Chip"], {
@@ -1443,7 +1557,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                                     variant: "outlined"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                                    lineNumber: 199,
+                                                                    lineNumber: 280,
                                                                     columnNumber: 27
                                                                 }, void 0),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Chip$2f$Chip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Chip$3e$__["Chip"], {
@@ -1452,13 +1566,13 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                                     color: getConfidenceColor(correction.confidence)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                                    lineNumber: 205,
+                                                                    lineNumber: 286,
                                                                     columnNumber: 27
                                                                 }, void 0)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                            lineNumber: 194,
+                                                            lineNumber: 275,
                                                             columnNumber: 25
                                                         }, void 0),
                                                         secondary: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Box$2f$Box$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Box$3e$__["Box"], {
@@ -1474,7 +1588,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                                             children: "From:"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                                            lineNumber: 215,
+                                                                            lineNumber: 296,
                                                                             columnNumber: 29
                                                                         }, void 0),
                                                                         " ",
@@ -1482,7 +1596,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                                    lineNumber: 214,
+                                                                    lineNumber: 295,
                                                                     columnNumber: 27
                                                                 }, void 0),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Typography$2f$Typography$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Typography$3e$__["Typography"], {
@@ -1496,7 +1610,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                                             children: "To:"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                                            lineNumber: 218,
+                                                                            lineNumber: 299,
                                                                             columnNumber: 29
                                                                         }, void 0),
                                                                         " ",
@@ -1504,7 +1618,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                                    lineNumber: 217,
+                                                                    lineNumber: 298,
                                                                     columnNumber: 27
                                                                 }, void 0),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Typography$2f$Typography$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Typography$3e$__["Typography"], {
@@ -1515,18 +1629,18 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                                     children: correction.reason
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                                    lineNumber: 220,
+                                                                    lineNumber: 301,
                                                                     columnNumber: 27
                                                                 }, void 0)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                            lineNumber: 213,
+                                                            lineNumber: 294,
                                                             columnNumber: 25
                                                         }, void 0)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                        lineNumber: 192,
+                                                        lineNumber: 273,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Button$2f$Button$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Button$3e$__["Button"], {
@@ -1534,7 +1648,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                         size: "small",
                                                         onClick: (e)=>{
                                                             e.stopPropagation();
-                                                            onApplyCorrection(correction);
+                                                            handleApplySingleCorrection(correction);
                                                         },
                                                         sx: {
                                                             ml: 2
@@ -1542,18 +1656,18 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                                         children: "Apply"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                        lineNumber: 226,
+                                                        lineNumber: 307,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, index, true, {
                                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                                lineNumber: 177,
+                                                lineNumber: 258,
                                                 columnNumber: 19
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                        lineNumber: 175,
+                                        lineNumber: 256,
                                         columnNumber: 15
                                     }, this)
                                 ]
@@ -1570,7 +1684,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                        lineNumber: 245,
+                                        lineNumber: 326,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Typography$2f$Typography$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Typography$3e$__["Typography"], {
@@ -1579,25 +1693,25 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                         children: 'Click "Detect Errors" to find and fix data issues'
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                        lineNumber: 246,
+                                        lineNumber: 327,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                lineNumber: 244,
+                                lineNumber: 325,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                        lineNumber: 151,
+                        lineNumber: 232,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                lineNumber: 130,
+                lineNumber: 211,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Dialog$2f$Dialog$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Dialog$3e$__["Dialog"], {
@@ -1616,19 +1730,19 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                     color: "primary"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                    lineNumber: 258,
+                                    lineNumber: 339,
                                     columnNumber: 13
                                 }, this),
                                 "Correction Details"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                            lineNumber: 257,
+                            lineNumber: 338,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                        lineNumber: 256,
+                        lineNumber: 337,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$DialogContent$2f$DialogContent$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__DialogContent$3e$__["DialogContent"], {
@@ -1643,7 +1757,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                    lineNumber: 265,
+                                    lineNumber: 346,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$TextField$2f$TextField$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__TextField$3e$__["TextField"], {
@@ -1656,7 +1770,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                    lineNumber: 269,
+                                    lineNumber: 350,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$TextField$2f$TextField$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__TextField$3e$__["TextField"], {
@@ -1669,7 +1783,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                    lineNumber: 277,
+                                    lineNumber: 358,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$TextField$2f$TextField$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__TextField$3e$__["TextField"], {
@@ -1684,7 +1798,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                    lineNumber: 285,
+                                    lineNumber: 366,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Box$2f$Box$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Box$3e$__["Box"], {
@@ -1698,7 +1812,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                             variant: "outlined"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                            lineNumber: 296,
+                                            lineNumber: 377,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Chip$2f$Chip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Chip$3e$__["Chip"], {
@@ -1706,24 +1820,24 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                             color: getConfidenceColor(selectedCorrection.confidence)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                            lineNumber: 301,
+                                            lineNumber: 382,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                    lineNumber: 295,
+                                    lineNumber: 376,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                            lineNumber: 264,
+                            lineNumber: 345,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                        lineNumber: 262,
+                        lineNumber: 343,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$DialogActions$2f$DialogActions$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__DialogActions$3e$__["DialogActions"], {
@@ -1733,7 +1847,7 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                 children: "Cancel"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                lineNumber: 310,
+                                lineNumber: 391,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Button$2f$Button$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Button$3e$__["Button"], {
@@ -1742,19 +1856,19 @@ function AIErrorCorrection({ data, onApplyCorrection, onApplyAllCorrections }) {
                                 children: "Apply Correction"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                                lineNumber: 311,
+                                lineNumber: 392,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                        lineNumber: 309,
+                        lineNumber: 390,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/wizard/AIErrorCorrection.tsx",
-                lineNumber: 255,
+                lineNumber: 336,
                 columnNumber: 7
             }, this)
         ]
@@ -1793,7 +1907,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$ico
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$Edit$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@mui/icons-material/esm/Edit.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$Preview$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@mui/icons-material/esm/Preview.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$CheckCircle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@mui/icons-material/esm/CheckCircle.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$wizardStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/store/wizardStore.ts [app-ssr] (ecmascript)");
 'use client';
+;
 ;
 ;
 ;
@@ -1807,6 +1923,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [previewData, setPreviewData] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
     const [previewDialogOpen, setPreviewDialogOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const applyDataModification = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$wizardStore$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useWizardStore"])((state)=>state.applyDataModification);
     const processModification = async ()=>{
         if (!instruction.trim()) {
             setError('Please enter a modification instruction');
@@ -1819,12 +1936,74 @@ function NaturalLanguageModification({ data, onApplyModification }) {
         setLoading(true);
         setError(null);
         try {
-            // Mock AI data modification for now - replace with actual AI service call
-            const mockModifiedData = data.map((row)=>{
+            // Create the modification function based on the instruction
+            const modificationFunction = (data)=>{
+                return data.map((row)=>{
+                    const modifiedRow = {
+                        ...row
+                    };
+                    // Apply transformations based on instruction keywords
+                    if (instruction.toLowerCase().includes('capitalize')) {
+                        Object.keys(modifiedRow).forEach((key)=>{
+                            if (typeof modifiedRow[key] === 'string') {
+                                modifiedRow[key] = modifiedRow[key].toUpperCase();
+                            }
+                        });
+                    }
+                    if (instruction.toLowerCase().includes('lowercase')) {
+                        Object.keys(modifiedRow).forEach((key)=>{
+                            if (typeof modifiedRow[key] === 'string') {
+                                modifiedRow[key] = modifiedRow[key].toLowerCase();
+                            }
+                        });
+                    }
+                    if (instruction.toLowerCase().includes('trim')) {
+                        Object.keys(modifiedRow).forEach((key)=>{
+                            if (typeof modifiedRow[key] === 'string') {
+                                modifiedRow[key] = modifiedRow[key].trim();
+                            }
+                        });
+                    }
+                    if (instruction.toLowerCase().includes('title case')) {
+                        Object.keys(modifiedRow).forEach((key)=>{
+                            if (typeof modifiedRow[key] === 'string') {
+                                modifiedRow[key] = modifiedRow[key].toLowerCase().split(' ').map((word)=>word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                            }
+                        });
+                    }
+                    if (instruction.toLowerCase().includes('remove spaces')) {
+                        Object.keys(modifiedRow).forEach((key)=>{
+                            if (typeof modifiedRow[key] === 'string') {
+                                modifiedRow[key] = modifiedRow[key].replace(/\s+/g, '');
+                            }
+                        });
+                    }
+                    return modifiedRow;
+                });
+            };
+            // Generate preview
+            const previewResult = modificationFunction([
+                ...data
+            ]);
+            // Simulate API delay
+            await new Promise((resolve)=>setTimeout(resolve, 1500));
+            setPreviewData(previewResult);
+            setPreviewDialogOpen(true);
+        } catch (err) {
+            setError('Failed to process modification');
+            console.error('AI modification error:', err);
+        } finally{
+            setLoading(false);
+        }
+    };
+    const handleApplyModification = ()=>{
+        // Apply the modification to the actual data in the store
+        applyDataModification((data)=>{
+            return data.map((row)=>{
                 const modifiedRow = {
                     ...row
                 };
-                // Simple mock transformations based on instruction keywords
+                // Apply the same transformations
                 if (instruction.toLowerCase().includes('capitalize')) {
                     Object.keys(modifiedRow).forEach((key)=>{
                         if (typeof modifiedRow[key] === 'string') {
@@ -1846,21 +2025,23 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                         }
                     });
                 }
+                if (instruction.toLowerCase().includes('title case')) {
+                    Object.keys(modifiedRow).forEach((key)=>{
+                        if (typeof modifiedRow[key] === 'string') {
+                            modifiedRow[key] = modifiedRow[key].toLowerCase().split(' ').map((word)=>word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                        }
+                    });
+                }
+                if (instruction.toLowerCase().includes('remove spaces')) {
+                    Object.keys(modifiedRow).forEach((key)=>{
+                        if (typeof modifiedRow[key] === 'string') {
+                            modifiedRow[key] = modifiedRow[key].replace(/\s+/g, '');
+                        }
+                    });
+                }
                 return modifiedRow;
             });
-            // Simulate API delay
-            await new Promise((resolve)=>setTimeout(resolve, 2000));
-            setPreviewData(mockModifiedData);
-            setPreviewDialogOpen(true);
-        } catch (err) {
-            setError('Failed to process modification');
-            console.error('AI modification error:', err);
-        } finally{
-            setLoading(false);
-        }
-    };
-    const handleApplyModification = ()=>{
-        onApplyModification(previewData);
+        });
         setPreviewDialogOpen(false);
         setInstruction('');
         setPreviewData([]);
@@ -1869,9 +2050,9 @@ function NaturalLanguageModification({ data, onApplyModification }) {
             'Capitalize all text fields',
             'Convert all text to lowercase',
             'Trim whitespace from all fields',
-            'Standardize date format to YYYY-MM-DD',
-            'Add prefix "ID-" to all ID fields',
-            'Remove special characters from names'
+            'Convert to title case',
+            'Remove all spaces from text',
+            'Standardize date format to YYYY-MM-DD'
         ];
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
@@ -1891,7 +2072,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                     color: "primary"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                    lineNumber: 123,
+                                    lineNumber: 204,
                                     columnNumber: 15
                                 }, void 0),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Typography$2f$Typography$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Typography$3e$__["Typography"], {
@@ -1899,19 +2080,19 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                     children: "Natural Language Modification"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                    lineNumber: 124,
+                                    lineNumber: 205,
                                     columnNumber: 15
                                 }, void 0)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                            lineNumber: 122,
+                            lineNumber: 203,
                             columnNumber: 13
                         }, void 0),
                         subheader: "Modify your data using plain English instructions"
                     }, void 0, false, {
                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                        lineNumber: 120,
+                        lineNumber: 201,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$CardContent$2f$CardContent$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CardContent$3e$__["CardContent"], {
@@ -1924,7 +2105,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                 children: error
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 132,
+                                lineNumber: 213,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$TextField$2f$TextField$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__TextField$3e$__["TextField"], {
@@ -1940,7 +2121,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 137,
+                                lineNumber: 218,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Box$2f$Box$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Box$3e$__["Box"], {
@@ -1956,17 +2137,17 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                             size: 20
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                            lineNumber: 153,
+                                            lineNumber: 234,
                                             columnNumber: 36
                                         }, void 0) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$Edit$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                             fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                            lineNumber: 153,
+                                            lineNumber: 234,
                                             columnNumber: 69
                                         }, void 0),
                                         children: loading ? 'Processing...' : 'Process Modification'
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                        lineNumber: 149,
+                                        lineNumber: 230,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Button$2f$Button$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Button$3e$__["Button"], {
@@ -1976,13 +2157,13 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                         children: "Clear"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                        lineNumber: 158,
+                                        lineNumber: 239,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 148,
+                                lineNumber: 229,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Divider$2f$Divider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Divider$3e$__["Divider"], {
@@ -1991,7 +2172,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 167,
+                                lineNumber: 248,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Typography$2f$Typography$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Typography$3e$__["Typography"], {
@@ -2000,7 +2181,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                 children: "Example Instructions:"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 169,
+                                lineNumber: 250,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Box$2f$Box$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Box$3e$__["Box"], {
@@ -2017,12 +2198,12 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                         }
                                     }, index, false, {
                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                        lineNumber: 175,
+                                        lineNumber: 256,
                                         columnNumber: 15
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 173,
+                                lineNumber: 254,
                                 columnNumber: 11
                             }, this),
                             !loading && data.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Box$2f$Box$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Box$3e$__["Box"], {
@@ -2039,7 +2220,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                                 children: "Data Preview:"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                                lineNumber: 189,
+                                                lineNumber: 270,
                                                 columnNumber: 17
                                             }, this),
                                             " ",
@@ -2048,7 +2229,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                        lineNumber: 188,
+                                        lineNumber: 269,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Typography$2f$Typography$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Typography$3e$__["Typography"], {
@@ -2060,25 +2241,25 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                        lineNumber: 191,
+                                        lineNumber: 272,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 187,
+                                lineNumber: 268,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                        lineNumber: 130,
+                        lineNumber: 211,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                lineNumber: 119,
+                lineNumber: 200,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Dialog$2f$Dialog$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Dialog$3e$__["Dialog"], {
@@ -2097,19 +2278,19 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                     color: "primary"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                    lineNumber: 208,
+                                    lineNumber: 289,
                                     columnNumber: 13
                                 }, this),
                                 "Modification Preview"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                            lineNumber: 207,
+                            lineNumber: 288,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                        lineNumber: 206,
+                        lineNumber: 287,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$DialogContent$2f$DialogContent$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__DialogContent$3e$__["DialogContent"], {
@@ -2125,7 +2306,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 213,
+                                lineNumber: 294,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Divider$2f$Divider$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Divider$3e$__["Divider"], {
@@ -2134,7 +2315,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 217,
+                                lineNumber: 298,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Box$2f$Box$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Box$3e$__["Box"], {
@@ -2164,7 +2345,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                                                        lineNumber: 229,
+                                                                        lineNumber: 310,
                                                                         columnNumber: 29
                                                                     }, void 0),
                                                                     " ",
@@ -2172,27 +2353,27 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                                                 ]
                                                             }, key, true, {
                                                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                                                lineNumber: 228,
+                                                                lineNumber: 309,
                                                                 columnNumber: 27
                                                             }, void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                                        lineNumber: 226,
+                                                        lineNumber: 307,
                                                         columnNumber: 23
                                                     }, void 0)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                                    lineNumber: 223,
+                                                    lineNumber: 304,
                                                     columnNumber: 19
                                                 }, this)
                                             }, index, false, {
                                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                                lineNumber: 222,
+                                                lineNumber: 303,
                                                 columnNumber: 17
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                        lineNumber: 220,
+                                        lineNumber: 301,
                                         columnNumber: 13
                                     }, this),
                                     previewData.length > 10 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Typography$2f$Typography$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Typography$3e$__["Typography"], {
@@ -2207,19 +2388,19 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                        lineNumber: 240,
+                                        lineNumber: 321,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 219,
+                                lineNumber: 300,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                        lineNumber: 212,
+                        lineNumber: 293,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$DialogActions$2f$DialogActions$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__DialogActions$3e$__["DialogActions"], {
@@ -2229,7 +2410,7 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                 children: "Cancel"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 247,
+                                lineNumber: 328,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Button$2f$Button$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Button$3e$__["Button"], {
@@ -2237,25 +2418,25 @@ function NaturalLanguageModification({ data, onApplyModification }) {
                                 variant: "contained",
                                 startIcon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$icons$2d$material$2f$esm$2f$CheckCircle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                     fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                    lineNumber: 251,
+                                    lineNumber: 332,
                                     columnNumber: 24
                                 }, void 0),
                                 children: "Apply Modification"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                                lineNumber: 248,
+                                lineNumber: 329,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                        lineNumber: 246,
+                        lineNumber: 327,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/wizard/NaturalLanguageModification.tsx",
-                lineNumber: 200,
+                lineNumber: 281,
                 columnNumber: 7
             }, this)
         ]
